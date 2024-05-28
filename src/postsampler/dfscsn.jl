@@ -1,4 +1,4 @@
-using LinearAlgebra, Distributions, Random, ProgressMeter, MvNormalCDF
+using LinearAlgebra, Distributions, Random, ProgressMeter
 import ..DFsCsn
 
 struct DFsCsnPostSampler
@@ -268,7 +268,6 @@ function log_posterior(sampler::DFsCsnPostSampler, theta, alpha, beta, sigma2, t
     lp += sum(logpdf.(Normal(0.0, sqrt(sampler.nu2_beta)), beta))
     lp += logpdf(InverseGamma(sampler.a_sigma2, sampler.b_sigma2), sigma2)
     lp += logpdf(InverseGamma(sampler.a_tau2, sampler.b_tau2), tau2)
-    lp += logpdf(Normal(0, sqrt(sampler.nu2_rhoT)), rhoT)
     lp += logpdf(Normal(0, sqrt(sampler.nu2_l)), l)
     return lp
 end
@@ -351,39 +350,4 @@ function sampling(
         "l" => l_samples,
         "lp" => lp_list
     )
-end
-
-function log_likelihood_sun(y, W, feature, theta_init, beta, sigma2, tau2, rhoS, rhoT, l)
-    T, K, dim = size(feature)
-    y_flatten = y'[:]
-    feature_reshaped = reshape(permutedims(feature, [2, 1, 3]), T * K, dim)
-
-    Q = Symmetric(rhoS * (Diagonal(sum(W, dims=2)[:]) - W) + (1-rhoS) * I(K))
-    invQ = inv(Q)
-    invQ_half = sqrt(invQ)
-    D = Symmetric(create_D(T, rhoT))
-    invD = inv(D)
-    invD_half = cholesky(invD).L
-    c = sqrt(pi * (1 + l^2) / ((pi - 2) * l^2 + pi))
-
-    lp = 0
-
-    cov_y = c^2 * tau2 * kron(invD, invQ) + sigma2 * I(T * K)
-    mu_y = feature_reshaped * beta + (repeat(theta_init, T) - c * l * sqrt(2 * tau2 / (pi * (1 + l^2))) * kron(invD_half, invQ_half) * ones(T * K))
-    lp -= 0.5 * logdet(cov_y)
-    lp -= 0.5 * (y_flatten - mu_y)' * (cov_y \ (y_flatten - mu_y))
-
-    cov_y_and_alpha = c * l * sqrt(tau2) * (kron(invD_half, invQ_half))'
-    conditional_mean_alpha = cov_y_and_alpha * (cov_y \ (y_flatten - mu_y))
-    conditional_cov_alpha = (1 + l^2) * I(T * K) - cov_y_and_alpha * (cov_y \ cov_y_and_alpha')
-
-    lp += mvnormcdf(
-        conditional_mean_alpha,
-        conditional_cov_alpha,
-        zeros(T * K),
-        Inf * ones(T * K)
-    )[1]
-
-    lp += T * K * log(2)
-    return lp
 end

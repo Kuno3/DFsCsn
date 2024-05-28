@@ -7,11 +7,9 @@ export
     DCarPostSampler,
     simulate,
     sampling,
-    log_likelihood_sun,
-    log_likelihood_normal,
-    logsumexp,
     calculate_inv,
-    calculate_sqrt
+    calculate_sqrt,
+    create_D
 
 include("simulator/dfscsn.jl")
 include("simulator/dcar.jl")

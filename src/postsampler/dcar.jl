@@ -43,7 +43,6 @@ struct DCarPostSampler
             b_sigma2,
             a_tau2,
             b_tau2,
-            nu2_rhoT,
             T,
             K,
             dim,
@@ -161,7 +160,6 @@ function log_posterior(sampler::DCarPostSampler, theta, beta, sigma2, tau2, rhoS
     lp += sum(logpdf.(Normal(0.0, sqrt(sampler.nu2_beta)), beta))
     lp += logpdf(InverseGamma(sampler.a_sigma2, sampler.b_sigma2), sigma2)
     lp += logpdf(InverseGamma(sampler.a_tau2, sampler.b_tau2), tau2)
-    lp += logpdf(Normal(0, sqrt(sampler.nu2_rhoT)), rhoT)
     return lp
 end
 
@@ -228,23 +226,4 @@ function sampling(
         "rhoT" => rhoT_samples,
         "lp" => lp_list
     )
-end
-
-function log_likelihood_normal(y, W, feature, theta_init, beta, sigma2, tau2, rhoS, rhoT)
-    T, K, dim = size(feature)
-    y_flatten = y'[:]
-    feature_reshaped = reshape(permutedims(feature, [2, 1, 3]), T * K, dim)
-
-    Q = Symmetric(rhoS * (Diagonal(sum(W, dims=2)[:]) - W) + (1-rhoS) * I(K))
-    invQ = inv(Q)
-    D = Symmetric(create_D(T, rhoT))
-    invD = inv(D)
-
-    lp = 0
-
-    cov_y = tau2 * kron(invD, invQ) + sigma2 * I(T * K)
-    mu_y = feature_reshaped * beta + repeat(theta_init, T)
-    lp -= 0.5 * logdet(cov_y)
-    lp -= 0.5 * (y_flatten - mu_y)' * (cov_y \ (y_flatten - mu_y))
-    return lp
 end
