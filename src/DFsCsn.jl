@@ -6,10 +6,7 @@ export
     DFsCsnPostSampler,
     DCarPostSampler,
     simulate,
-    sampling,
-    calculate_inv,
-    calculate_sqrt,
-    create_D
+    sampling
 
 include("simulator/dfscsn.jl")
 include("simulator/dcar.jl")

@@ -39,17 +39,17 @@ function simulate(simulator::DFsCsnSimulator)
     invQ_half = sqrt(invQ)
     c = sqrt(pi*(1+simulator.l^2) / ((pi-2)*simulator.l^2+pi))
 
-    simulator.alpha[1,:] = abs.(rand(Normal(0, sqrt(1+simulator.l^2)), simulator.K))
-    conditional_mu_theta = c * simulator.l * sqrt(simulator.tau2) / (1+simulator.l^2) * invQ_half * (simulator.alpha[1,:] - sqrt(2*(1+simulator.l^2)/pi) * ones(simulator.K))
+    simulator.alpha[1, :] = abs.(rand(Normal(0, sqrt(1+simulator.l^2)), simulator.K))
+    conditional_mu_theta = c * simulator.l * sqrt(simulator.tau2) / (1+simulator.l^2) * invQ_half * (simulator.alpha[1, :] - sqrt(2*(1+simulator.l^2)/pi) * ones(simulator.K))
     conditional_cov_theta = (c^2 * simulator.tau2 * invQ) / (1+simulator.l^2)
-    simulator.theta[1,:] = simulator.rhoT * simulator.theta_init + rand(MvNormal(conditional_mu_theta, conditional_cov_theta))
-    simulator.y[1,:] = simulator.feature[1,:,:] * simulator.beta + simulator.theta[1,:] + sqrt(simulator.sigma2) * randn(simulator.K)
+    simulator.theta[1, :] = simulator.rhoT * simulator.theta_init + rand(MvNormal(conditional_mu_theta, conditional_cov_theta))
+    simulator.y[1, :] = simulator.feature[1, :, :] * simulator.beta + simulator.theta[1, :] + sqrt(simulator.sigma2) * randn(simulator.K)
 
     for t in 2:simulator.T
-        simulator.alpha[t,:] = abs.(rand(Normal(0, sqrt(1+simulator.l^2)), simulator.K))
-        conditional_mu_theta = c * simulator.l * sqrt(simulator.tau2) / (1+simulator.l^2) * invQ_half * (simulator.alpha[t,:] - sqrt(2*(1+simulator.l^2)/pi) * ones(simulator.K))
+        simulator.alpha[t, :] = abs.(rand(Normal(0, sqrt(1+simulator.l^2)), simulator.K))
+        conditional_mu_theta = c * simulator.l * sqrt(simulator.tau2) / (1+simulator.l^2) * invQ_half * (simulator.alpha[t, :] - sqrt(2*(1+simulator.l^2)/pi) * ones(simulator.K))
         conditional_cov_theta = (c^2 * simulator.tau2 * invQ) / (1+simulator.l^2)
-        simulator.theta[t,:] = simulator.rhoT * simulator.theta[t-1,:] + rand(MvNormal(conditional_mu_theta, conditional_cov_theta))
-        simulator.y[t,:] = simulator.feature[t,:,:] * simulator.beta + simulator.theta[t,:] + sqrt(simulator.sigma2) * randn(simulator.K)
+        simulator.theta[t, :] = simulator.rhoT * simulator.theta[t-1, :] + rand(MvNormal(conditional_mu_theta, conditional_cov_theta))
+        simulator.y[t, :] = simulator.feature[t, :, :] * simulator.beta + simulator.theta[t, :] + sqrt(simulator.sigma2) * randn(simulator.K)
     end
 end
